@@ -24,7 +24,21 @@ import {
   FileText,
   Plus
 } from 'lucide-react'
-import { PieChart as RechartsPieChart, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
+
+// Importação dinâmica dos componentes de gráfico
+import dynamic from 'next/dynamic'
+
+const RechartsPieChart = dynamic(() => import('recharts').then(mod => mod.PieChart), { ssr: false })
+const Pie = dynamic(() => import('recharts').then(mod => mod.Pie), { ssr: false })
+const Cell = dynamic(() => import('recharts').then(mod => mod.Cell), { ssr: false })
+const ResponsiveContainer = dynamic(() => import('recharts').then(mod => mod.ResponsiveContainer), { ssr: false })
+const BarChart = dynamic(() => import('recharts').then(mod => mod.BarChart), { ssr: false })
+const Bar = dynamic(() => import('recharts').then(mod => mod.Bar), { ssr: false })
+const XAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false })
+const YAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false })
+const CartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false })
+const Tooltip = dynamic(() => import('recharts').then(mod => mod.Tooltip), { ssr: false })
+const Legend = dynamic(() => import('recharts').then(mod => mod.Legend), { ssr: false })
 
 // Dados mock para demonstração
 const mockReservas = [
@@ -89,6 +103,7 @@ const mockClientes = [
 ]
 
 export default function RelatoriosPage() {
+  const [isClient, setIsClient] = useState(false)
   const [filtros, setFiltros] = useState({
     periodo: '30',
     operadora: '',
@@ -106,20 +121,26 @@ export default function RelatoriosPage() {
     ticket_medio: 0
   })
 
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   // Calcular dados do resumo
   useEffect(() => {
-    const num_vendas = mockReservas.length
-    const valor_vendido = mockReservas.reduce((acc, r) => acc + r.valor_venda, 0)
-    const comissao_total = mockReservas.reduce((acc, r) => acc + r.comissao_calculada + (r.comissao_lancada_manual || 0), 0)
-    const ticket_medio = valor_vendido / num_vendas || 0
+    if (isClient) {
+      const num_vendas = mockReservas.length
+      const valor_vendido = mockReservas.reduce((acc, r) => acc + r.valor_venda, 0)
+      const comissao_total = mockReservas.reduce((acc, r) => acc + r.comissao_calculada + (r.comissao_lancada_manual || 0), 0)
+      const ticket_medio = valor_vendido / num_vendas || 0
 
-    setDadosResumo({
-      num_vendas,
-      valor_vendido,
-      comissao_total,
-      ticket_medio
-    })
-  }, [])
+      setDadosResumo({
+        num_vendas,
+        valor_vendido,
+        comissao_total,
+        ticket_medio
+      })
+    }
+  }, [isClient])
 
   // Dados para gráficos
   const dadosOrigemVendas = [
@@ -159,6 +180,18 @@ export default function RelatoriosPage() {
   }
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
+
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-gray-500">Carregando relatórios...</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
